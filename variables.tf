@@ -28,6 +28,23 @@ variable "enable_securityhub" {
     default     = false
 }
 
+variable "securityhub_standards" {  
+    description = "List of Security Hub standards to enable"
+    type        = list(object({
+        name    = string
+        version = string
+    }))
+    validation {
+      condition = alltrue([
+        for s in var.securityhub_standards : 
+        contains(keys(local.securityhub_standard_arns), s.name) &&
+        contains(keys(local.securityhub_standard_arns[s.name]), s.version)
+      ])
+      error_message = "Invalid security hub standard or version. Check available names & versions in locals."
+    }
+    default     = []
+}
+
 variable "enable_cloudtrail" {
     description = "Set to true to enable AWS CloudTrail"
     type        = bool

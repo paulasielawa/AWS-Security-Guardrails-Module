@@ -46,4 +46,13 @@ resource "aws_guardduty_detector_feature" "rds_protection" {
 }
 
 # Enable Security Hub
-resource "aws_securityhub_account" "securityhub_acc" {}
+resource "aws_securityhub_account" "securityhub_acc" {
+    count = var.enable_securityhub ? 1 : 0
+}
+
+resource "aws_securityhub_standards_subscription" "securityhub_standards" {
+    count = var.enable_securityhub ? length(var.securityhub_standards) : 0
+
+    standards_arn = local.securityhub_standard_arns[var.securityhub_standards[count.index].name][var.securityhub_standards[count.index].version]
+    depends_on    = [aws_securityhub_account.securityhub_acc]
+}
