@@ -51,6 +51,67 @@ variable "enable_cloudtrail" {
     default     = false
 }
 
+variable "trail_name" {
+    description = "Name of the CloudTrail trail to create"
+    type        = string
+    default     = "guardrails-cloudtrail"
+}
+
+variable "enable_cloudwatch_log_group" {
+    description     = "Enable cloudwatch log group to cloudtrail"
+    type            = bool
+    default         = false
+}
+
+variable "cloudwatch_log_group_retention_in_days" {
+    description = "Number of days to retain CloudWatch log group data"
+    type        = number
+    default     = 60
+}
+
+variable "cloudtrail_multi_region" {
+    description = "Set to true to enable multi-region CloudTrail"
+    type        = bool
+    default     = false
+}
+
+variable "cloudtrail_log_file_validation" {
+    description = "Set to true to enable log file validation for CloudTrail"
+    type        = bool
+    default     = false
+}
+
+variable "include_global_service_events" {
+    description = "Set to true to include global service events in CloudTrail"
+    type        = bool
+    default     = true
+}
+
+variable "kms_key_id" {
+    description = "KMS Key ID for encrypting CloudTrail logs."
+    type        = string
+    default     = null
+}   
+
+variable "s3_prefix" { 
+    description = "S3 key prefix for CloudTrail log files"
+    type        = string
+    default     = null
+}
+
+variable "enable_organization_trail" {
+    description = "Enable AWS Organization-wide CloudTrail.  Must be deployed in management account."
+    type        = bool
+    default     = false
+
+    validation {
+      condition = (
+        var.enable_organization_trail == false || (var.enable_organization_trail == true)
+      )
+      error_message = "Organization-wide CloudTrail can only be enabled in the AWS Organization management account."
+    }
+}
+
 variable "enable_access_analyzer" {
     description = "Set to true to enable AWS Access Analyzer"
     type        = bool
