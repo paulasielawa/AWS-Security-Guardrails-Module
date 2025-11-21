@@ -1,10 +1,23 @@
 locals {
+  features = {
+    S3_DATA_EVENTS        = var.features.s3_protection
+    EKS_RUNTIME_MONITORING = var.features.eks_runtime_monitoring
+    EKS_AUDIT_LOGS        = var.features.eks_protection
+    EBS_MALWARE_PROTECTION = var.features.malware_protection
+    RDS_LOGIN_EVENTS      = var.features.rds_protection
+    LAMBDA_NETWORK_LOGS   = var.features.lambda_network_logs
+    VPC_FLOW_LOGS         = var.features.vpc_flow_logs
+    DNS_LOGS              = var.features.dns_logs
+  }
+  
   securityhub_standard_arns = {
     "cis-aws-foundations-benchmark" = {
         "v3.0.0" = "arn:aws:securityhub:${data.aws_region.current.name}::standards/cis-aws-foundations-benchmark/v/3.0.0",
         "v1.4.0" = "arn:aws:securityhub:${data.aws_region.current.name}::standards/cis-aws-foundations-benchmark/v/1.4.0",
+        # this v1.2.0 it is enabled by default in security hub
         "v1.2.0" = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
-    }          
+    }   
+    # aws foundational security best practices it is enabled by default in security hub       
     "aws-foundational-security-best-practices" = {
         "v1.0.0" = "arn:aws:securityhub:${data.aws_region.current.name}::standards/aws-foundational-security-best-practices/v/1.0.0"
     }      

@@ -35,6 +35,11 @@ In progress: S3 Public Access Block and IAM Access Analyzer
   - Optional KMS encryption
   - Optional organization-wide trail
 
+- **AWS Config**: 
+  - AWS Config must only be enabled in standalone or isolated accounts.
+  - If you are using AWS Organizations, Control Tower, or Central Governance, then AWS Config is already managed at the organization level.
+  - In those environments, enabling AWS Config inside this module will conflict with the org-level recorder.
+
 ---
 
 ## Usage

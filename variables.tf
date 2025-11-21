@@ -11,14 +11,20 @@ variable "features" {
       eks_runtime_monitoring  = bool
       eks_protection          = bool
       malware_protection      = bool
-      rds_protection          = bool 
+      rds_protection          = bool
+      lambda_network_logs     = bool
+      vpc_flow_logs           = bool
+      dns_logs                = bool 
     })
     default = {
-      s3_protection           = false
+      s3_protection           = true
       eks_runtime_monitoring  = false
-      eks_protection          = false
+      eks_protection          = true
       malware_protection      = false
-      rds_protection          = false 
+      rds_protection          = true
+      lambda_network_logs     = true
+      vpc_flow_logs           = true
+      dns_logs                = true
     }
 }
 
@@ -43,6 +49,12 @@ variable "securityhub_standards" {
       error_message = "Invalid security hub standard or version. Check available names & versions in locals."
     }
     default     = []
+}
+
+variable "enable_config" {
+    description = "Set to true to enable AWS Config. Must only be enabled in a standalone or isolated account."
+    type        = bool
+    default     = false
 }
 
 variable "enable_cloudtrail" {
