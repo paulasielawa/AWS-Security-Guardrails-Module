@@ -6,45 +6,12 @@ resource "aws_guardduty_detector" "detector" {
     enable = true
 }
 
-resource "aws_guardduty_detector_feature" "s3_protection" {
-  count = var.features.s3_protection ? 1 : 0
+resource "aws_guardduty_detector_feature" "features" {
+  for_each = var.enable_guardduty ? local.features : {}
   
   detector_id = aws_guardduty_detector.detector[0].id
-  name        = "S3_DATA_EVENTS"
-  status      = "ENABLED"
-}
-
-resource "aws_guardduty_detector_feature" "eks_runtime_monitoring" {
-  count = var.features.eks_runtime_monitoring ? 1 : 0
-  
-  detector_id = aws_guardduty_detector.detector[0].id
-  name        = "EKS_RUNTIME_MONITORING"
-  status      = "ENABLED"
-}
-
-resource "aws_guardduty_detector_feature" "eks_protection" {
-  count = var.features.eks_protection ? 1 : 0
-  
-  detector_id = aws_guardduty_detector.detector[0].id
-  name        = "EKS_AUDIT_LOGS"
-  status      = "ENABLED"
-}
-
-resource "aws_guardduty_detector_feature" "malware_protection" {
-  count = var.features.malware_protection ? 1 : 0
-  
-  detector_id = aws_guardduty_detector.detector[0].id
-  name        = "EBS_MALWARE_PROTECTION"
-  status      = "ENABLED"
-}
-
-resource "aws_guardduty_detector_feature" "rds_protection" {
-  count = var.features.rds_protection ? 1 : 0
-  
-  detector_id = aws_guardduty_detector.detector[0].id
-  name        = "RDS_LOGIN_EVENTS"
-  status      = "ENABLED"
-  
+  name = each.key
+  status = each.value ? "ENABLED" : "DISABLED"
 }
 
 ########################################
@@ -59,6 +26,94 @@ resource "aws_securityhub_standards_subscription" "securityhub_standards" {
 
     standards_arn = local.securityhub_standard_arns[var.securityhub_standards[count.index].name][var.securityhub_standards[count.index].version]
     depends_on    = [aws_securityhub_account.securityhub_acc]
+}
+resource "aws_iam_role" "config" {
+  name               = "default-awsconfig"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "config_role_attachment" {
+  role       = aws_iam_role.config.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
+}
+
+resource "aws_s3_bucket" "config_bucket" {
+  count  = var.enable_config ? 1 : 0
+
+  bucket = "awsconfig-default-bucket-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_policy" "config_bucket_policy" {
+  count  = var.enable_config ? 1 : 0
+
+  bucket = aws_s3_bucket.config_bucket[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AWSConfigBucketPermissionsCheck"
+        Effect    = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.config_bucket[0].arn
+      },
+      {
+        Sid       = "AWSConfigBucketDelivery"
+        Effect    = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.config_bucket[0].arn}/*"
+        Condition = {
+          StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" }
+        }
+      }
+    ]
+  })
+  
+}
+
+resource "aws_config_configuration_recorder" "config_recorder" {
+  count    = var.enable_config ? 1 : 0
+
+  name     = "default"
+  role_arn = aws_iam_role.config.arn
+
+  recording_group {
+    all_supported = true
+    include_global_resource_types = true
+  }
+}
+
+resource "aws_config_delivery_channel" "config_delivery_channel" {
+  count          = var.enable_config ? 1 : 0
+
+  name           = "default"
+  s3_bucket_name = aws_s3_bucket.config_bucket[0].bucket
+
+  depends_on = [ aws_config_configuration_recorder.config_recorder ]
+}
+
+resource "aws_config_configuration_recorder_status" "config_recorder_status" {
+  count      = var.enable_config ? 1 : 0
+
+  name       = aws_config_configuration_recorder.config_recorder[0].name
+  is_enabled = true
+  depends_on = [aws_config_delivery_channel.config_delivery_channel]
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 ########################################
