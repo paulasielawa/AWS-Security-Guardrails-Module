@@ -124,8 +124,14 @@ variable "enable_organization_trail" {
     }
 }
 
-variable "enable_access_analyzer" {
-    description = "Set to true to enable AWS Access Analyzer"
+variable "enable_access_analyzer_account" {
+    description = "Set to true to enable AWS Access Analyzer in the account"
+    type        = bool
+    default     = false
+}
+
+variable "enable_access_analyzer_organization" {
+    description = "Set to true to enable AWS Access Analyzer in the organization. Must be deployed in management account."
     type        = bool
     default     = false
 }

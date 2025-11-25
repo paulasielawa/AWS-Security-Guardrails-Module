@@ -248,3 +248,20 @@ resource "aws_cloudtrail" "cloudtrail" {
     cloud_watch_logs_group_arn    = var.enable_cloudwatch_log_group ? aws_cloudwatch_log_group.trail_log_group[0].arn : null
     depends_on                    = [aws_s3_bucket_policy.cloudtrail_policy]
 }
+
+########################################
+# Access Analyzer Setup
+########################################
+resource "aws_accessanalyzer_analyzer" "access_analyzer_account" {
+    count = var.enable_access_analyzer_account ? 1 : 0
+
+    analyzer_name = "account-analyzer"
+    type          = "ACCOUNT"
+}
+
+resource "aws_accessanalyzer_analyzer" "access_analyzer_organization" {
+    count = var.enable_access_analyzer_organization ? 1 : 0
+
+    analyzer_name = "organization-analyzer"
+    type          = "ORGANIZATION"
+}
