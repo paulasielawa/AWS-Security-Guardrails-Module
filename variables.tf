@@ -111,23 +111,42 @@ variable "s3_prefix" {
     default     = null
 }
 
+variable "is_management_account" {
+    description = "Set to true when running this module in the AWS Organization management account"
+    type        = bool
+    default     = false
+}
+
 variable "enable_organization_trail" {
-    description = "Enable AWS Organization-wide CloudTrail.  Must be deployed in management account."
+    description = "Enable AWS Organization-wide CloudTrail. Must be deployed in management account."
     type        = bool
     default     = false
 
     validation {
       condition = (
-        var.enable_organization_trail == false || (var.enable_organization_trail == true)
+        !var.enable_organization_trail || var.is_management_account
       )
       error_message = "Organization-wide CloudTrail can only be enabled in the AWS Organization management account."
     }
 }
 
-variable "enable_access_analyzer" {
-    description = "Set to true to enable AWS Access Analyzer"
+variable "enable_access_analyzer_account" {
+    description = "Set to true to enable AWS Access Analyzer in the account"
     type        = bool
     default     = false
+}
+
+variable "enable_access_analyzer_organization" {
+    description = "Set to true to enable AWS Access Analyzer in the organization. Must be deployed in management account."
+    type        = bool
+    default     = false
+
+    validation {
+        condition = (
+            !var.enable_access_analyzer_organization || var.is_management_account
+        )
+        error_message = "Organization-wide Access Analyzer can only be enabled in the AWS Organization management account."
+    }
 }
 
 variable "enable_s3_public_block" {
