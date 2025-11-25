@@ -4,6 +4,7 @@
 resource "aws_guardduty_detector" "detector" {
     count = var.enable_guardduty ? 1 : 0
     enable = true
+    tags   = var.tags
 }
 
 resource "aws_guardduty_detector_feature" "features" {
@@ -30,6 +31,7 @@ resource "aws_securityhub_standards_subscription" "securityhub_standards" {
 resource "aws_iam_role" "config" {
   name               = "default-awsconfig"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "config_role_attachment" {
@@ -42,6 +44,7 @@ resource "aws_s3_bucket" "config_bucket" {
 
   bucket = "awsconfig-default-bucket-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
   force_destroy = true
+  tags = var.tags
 }
 
 resource "aws_s3_bucket_policy" "config_bucket_policy" {
@@ -122,6 +125,7 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_s3_bucket" "cloudtrail_bucket" {
   bucket        = local.bucket_name
   force_destroy = true
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "trail" {
@@ -189,6 +193,7 @@ resource "aws_cloudwatch_log_group" "trail_log_group" {
 
     name              = "/aws/cloudtrail/${var.trail_name}"
     retention_in_days = var.cloudwatch_log_group_retention_in_days
+    tags              = var.tags
 }
 
 resource "aws_iam_role" "cloudtrail_cw_role" {
@@ -208,6 +213,7 @@ resource "aws_iam_role" "cloudtrail_cw_role" {
       }
     ]
   })
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy" "cloudtrail_cw_policy" {
@@ -247,6 +253,7 @@ resource "aws_cloudtrail" "cloudtrail" {
     cloud_watch_logs_role_arn     = var.enable_cloudwatch_log_group ? aws_iam_role.cloudtrail_cw_role[0].arn : null
     cloud_watch_logs_group_arn    = var.enable_cloudwatch_log_group ? aws_cloudwatch_log_group.trail_log_group[0].arn : null
     depends_on                    = [aws_s3_bucket_policy.cloudtrail_policy]
+    tags                          = var.tags
 }
 
 ########################################
@@ -257,6 +264,7 @@ resource "aws_accessanalyzer_analyzer" "access_analyzer_account" {
 
     analyzer_name = "account-analyzer"
     type          = "ACCOUNT"
+    tags          = var.tags
 }
 
 resource "aws_accessanalyzer_analyzer" "access_analyzer_organization" {
@@ -264,6 +272,7 @@ resource "aws_accessanalyzer_analyzer" "access_analyzer_organization" {
 
     analyzer_name = "organization-analyzer"
     type          = "ORGANIZATION"
+    tags          = var.tags
 }
 
 ########################################

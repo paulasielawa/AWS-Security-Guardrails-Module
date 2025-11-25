@@ -155,3 +155,8 @@ variable "enable_s3_public_block" {
     default     = false
 }
 
+variable "tags" {
+    description = "Optional tags to apply to resources deployed from this module"
+    type        = map(string)
+    default     = {}
+}
